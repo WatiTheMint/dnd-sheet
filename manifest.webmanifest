@@ -1,0 +1,19 @@
+{
+  "name": "Лист героя — D&D 5e",
+  "short_name": "Лист героя",
+  "description": "Лист персонажа D&D 5e с автоподсчётом, кастомными листами и кубами. Работает без интернета.",
+  "lang": "ru",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#15110e",
+  "theme_color": "#15110e",
+  "categories": ["games", "entertainment", "utilities"],
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "favicon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}
