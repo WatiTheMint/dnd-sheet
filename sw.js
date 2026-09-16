@@ -1,5 +1,5 @@
 /* Лист героя — service worker. Сгенерирован при сборке. */
-const VERSION = "15fojat";
+const VERSION = "1ed6jst";
 const CACHE = 'dnd-sheet-' + VERSION;
 const RUNTIME = 'dnd-sheet-runtime-' + VERSION;
 const PRECACHE = ["./","./assets/index-CsR4aMXY.js","./assets/alegreya-cyrillic-500-normal-uJUgykjJ.woff2","./assets/alegreya-cyrillic-700-normal-Bftrb-m-.woff2","./assets/alegreya-cyrillic-800-normal-TM6to0H1.woff2","./assets/alegreya-latin-500-normal-C25lLdV_.woff2","./assets/alegreya-latin-700-normal-Vpz_43wJ.woff2","./assets/alegreya-latin-800-normal-BcufLBxY.woff2","./assets/alegreya-sans-cyrillic-400-normal-CFUoBDld.woff2","./assets/alegreya-sans-cyrillic-500-normal-kQHBM3cE.woff2","./assets/alegreya-sans-cyrillic-700-normal-BMO00Gdb.woff2","./assets/alegreya-sans-cyrillic-800-normal-D2Jsre_s.woff2","./assets/alegreya-sans-latin-400-normal-DtLlO8BS.woff2","./assets/alegreya-sans-latin-500-normal-DS713u5J.woff2","./assets/alegreya-sans-latin-700-normal-DEbcy2sF.woff2","./assets/alegreya-sans-latin-800-normal-CpHsWMQ0.woff2","./assets/alegreya-sc-cyrillic-500-normal-BjmNXJC0.woff2","./assets/alegreya-sc-cyrillic-700-normal-DywRGmLG.woff2","./assets/alegreya-sc-latin-500-normal-4QwauZv7.woff2","./assets/alegreya-sc-latin-700-normal-ztAmjLTs.woff2","./assets/caveat-cyrillic-500-normal-DpMZbbjM.woff2","./assets/caveat-latin-500-normal-B9SDL8cy.woff2","./assets/index-SwcwlVCd.css","./index.html","./favicon.svg","./manifest.webmanifest","./icon-192.png","./icon-512.png","./apple-touch-icon.png"];
@@ -31,13 +31,18 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
 
-  // Страница: всегда версия из кэша (сайт открывается мгновенно и без интернета), обновление приходит новым service worker
   if (request.mode === 'navigate') {
+    const root = new URL(self.registration.scope).pathname;
+    const appEntry = url.pathname === root || url.pathname === root + 'index.html';
+    const fromCache = caches
+      .open(CACHE)
+      .then((cache) => cache.match('./index.html', MATCH).then((hit) => hit || cache.match('./', MATCH)));
+    // Свой адрес — сразу из кэша, сайт открывается мгновенно и без интернета.
+    // Чужой адрес — с сервера, чтобы показалась страница 404; без сети открываем сайт.
     event.respondWith(
-      caches
-        .open(CACHE)
-        .then((cache) => cache.match('./index.html', MATCH).then((hit) => hit || cache.match('./', MATCH)))
-        .then((hit) => hit || fetch(request)),
+      appEntry
+        ? fromCache.then((hit) => hit || fetch(request))
+        : fetch(request).catch(() => fromCache.then((hit) => hit || Response.error())),
     );
     return;
   }

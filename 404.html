@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex" />
+    <meta name="theme-color" content="#15110e" />
+    <title>404 — Лист героя</title>
+    <link rel="icon" type="image/svg+xml" href="https://watithemint.github.io/dnd-sheet/favicon.svg" />
+    <style>
+      :root {
+        --bg: #15110e;
+        --ink: #efe5d2;
+        --ink-2: #c1b199;
+        --ink-3: #8a7c68;
+        --gold: #deaa55;
+        --accent: #e0573b;
+        --line: #372d25;
+      }
+      * { box-sizing: border-box; }
+      html, body { height: 100%; }
+      body {
+        margin: 0;
+        display: grid;
+        place-items: center;
+        padding: 24px;
+        color: var(--ink);
+        font: 400 16px/1.5 'Alegreya Sans', 'Segoe UI', system-ui, sans-serif;
+        background:
+          radial-gradient(1100px 620px at 8% -8%, rgba(224, 87, 59, 0.1), transparent 62%),
+          radial-gradient(900px 520px at 105% 0%, rgba(222, 170, 85, 0.06), transparent 60%),
+          var(--bg);
+      }
+      main { display: grid; justify-items: center; gap: 14px; max-width: 560px; text-align: center; }
+      .eyebrow { margin: 0; font: 700 12.5px Georgia, serif; letter-spacing: 0.22em; text-transform: uppercase; color: var(--gold); }
+      h1 { margin: 0; font: 700 clamp(28px, 6vw, 40px)/1.15 Georgia, 'Times New Roman', serif; }
+      p { margin: 0; color: var(--ink-2); }
+      .hint { color: var(--ink-3); font-size: 14px; }
+      .die {
+        margin: 6px 0 2px;
+        padding: 0;
+        border: 0;
+        background: none;
+        color: var(--gold);
+        cursor: pointer;
+        line-height: 0;
+        border-radius: 50%;
+        transition: transform 0.2s ease;
+      }
+      .die:hover { transform: scale(1.05) rotate(-6deg); }
+      .die:focus-visible { outline: 2px solid var(--gold); outline-offset: 8px; }
+      .die svg { filter: drop-shadow(0 12px 28px rgba(0, 0, 0, 0.55)); }
+      .die.rolling { animation: tumble 0.9s cubic-bezier(0.2, 0.7, 0.2, 1); pointer-events: none; }
+      .die.crit svg { filter: drop-shadow(0 0 22px var(--gold)); }
+      .die.crit { animation: pop 0.5s cubic-bezier(0.2, 0.7, 0.2, 1); }
+      @keyframes tumble {
+        0% { transform: rotate(0) scale(1); }
+        30% { transform: rotate(210deg) scale(0.88); }
+        70% { transform: rotate(560deg) scale(1.12); }
+        100% { transform: rotate(720deg) scale(1); }
+      }
+      @keyframes pop {
+        0% { transform: scale(0.85); }
+        60% { transform: scale(1.14); }
+        100% { transform: scale(1); }
+      }
+      #num { font: 700 26px Georgia, 'Times New Roman', serif; fill: var(--accent); }
+      .die.crit #num { fill: var(--gold); }
+      .result { min-height: 26px; margin: 0; font: 700 18px Georgia, serif; color: var(--gold); opacity: 0; transition: opacity 0.25s; }
+      .result.show { opacity: 1; }
+      a.home {
+        margin-top: 4px;
+        padding: 10px 18px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        color: var(--ink);
+        text-decoration: none;
+        font-weight: 500;
+      }
+      a.home:hover { border-color: var(--gold); color: var(--gold); }
+      @media (prefers-reduced-motion: reduce) {
+        .die, .die.rolling, .die.crit { animation: none; transition: none; }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <p class="eyebrow">Ошибка 404</p>
+      <h1>Эта страница провалилась в другой план</h1>
+      <p>Ссылка ведёт в никуда. Бросьте кубик — и портал вернёт вас на лист героя.</p>
+
+      <button class="die" id="die" type="button" aria-label="Бросить к20 и вернуться на сайт" title="Бросить к20">
+        <svg viewBox="0 0 64 64" width="180" height="180" aria-hidden="true">
+          <g fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round">
+            <path d="M32 6 55 19v26L32 58 9 45V19z" />
+            <path d="M32 6 20 38h24zM9 19l11 19M55 19 44 38M20 38l12 20 12-20M9 45l11-7M55 45l-11-7" opacity=".85" />
+          </g>
+          <text id="num" x="32" y="34" text-anchor="middle">?</text>
+        </svg>
+      </button>
+
+      <p class="result" id="result" role="status"></p>
+      <p class="hint">Двадцатка выпадает всегда — подземелье сегодня доброе.</p>
+      <a class="home" href="https://watithemint.github.io/dnd-sheet/">Вернуться на лист героя</a>
+    </main>
+
+    <script>
+      (function () {
+        var HOME = 'https://watithemint.github.io/dnd-sheet/';
+        var die = document.getElementById('die');
+        var num = document.getElementById('num');
+        var result = document.getElementById('result');
+        var calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        die.addEventListener('click', function () {
+          die.classList.add('rolling');
+          var spin = calm
+            ? 0
+            : setInterval(function () {
+                num.textContent = String(Math.floor(Math.random() * 19) + 1);
+              }, 60);
+
+          setTimeout(function () {
+            if (spin) clearInterval(spin);
+            num.textContent = '20';
+            die.classList.remove('rolling');
+            die.classList.add('crit');
+            result.textContent = 'Натуральная 20! Открываю лист героя…';
+            result.classList.add('show');
+            setTimeout(function () {
+              window.location.href = HOME;
+            }, calm ? 400 : 1000);
+          }, calm ? 150 : 900);
+        });
+      })();
+    </script>
+  </body>
+</html>
