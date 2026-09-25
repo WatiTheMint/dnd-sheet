@@ -18,6 +18,7 @@
   ],
   "screenshots": [
     { "src": "screenshots/sheet.webp", "sizes": "1440x900", "type": "image/webp", "form_factor": "wide", "label": "Лист героя со спутником" },
+    { "src": "screenshots/room.webp", "sizes": "1440x900", "type": "image/webp", "form_factor": "wide", "label": "Комната игроков для мастера" },
     { "src": "screenshots/custom-sheet.webp", "sizes": "1440x900", "type": "image/webp", "form_factor": "wide", "label": "Свой лист из картинки" },
     { "src": "screenshots/mobile.webp", "sizes": "780x1688", "type": "image/webp", "form_factor": "narrow", "label": "Лист на телефоне" }
   ]

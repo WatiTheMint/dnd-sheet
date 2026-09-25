@@ -4,7 +4,20 @@
     "title": "Поддержать проект",
     "text": "Лист героя бесплатный и без рекламы. Если он пригодился вашей группе — можно угостить автора чашкой кофе.",
     "links": [
-      { "label": "Ko-fi", "url": "https://ko-fi.com/wati_mint" }
+      {
+        "label": "Ko-fi",
+        "url": "https://ko-fi.com/wati_mint"
+      }
     ]
+  },
+  "sync": {
+    "_как_включить": "Живые комнаты: вставьте сюда настройки веб-приложения Firebase (пошагово — в README, раздел «Живые комнаты»). Пока поля пустые, синхронизация выключена и Firebase не загружается.",
+    "firebase": {
+      "apiKey": "AIzaSyBRGEHaQ1JXYjxoO8-1dmNpMdZ_DT8wpYc",
+      "authDomain": "dnd-sheet-96fe8.firebaseapp.com",
+      "databaseURL": "https://dnd-sheet-96fe8-default-rtdb.europe-west1.firebasedatabase.app",
+      "projectId": "dnd-sheet-96fe8",
+      "appId": "1:929706289699:web:813cbeee6fc4d701289f96"
+    }
   }
 }

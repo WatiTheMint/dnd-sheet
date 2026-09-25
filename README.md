@@ -5,7 +5,7 @@
 # Лист героя
 
 **Лист персонажа D&D 5e, который считает сам.**<br />
-Правила 2014 и 2024 · свои листы из картинки или PDF · спутники · кубы · работает без интернета
+Правила 2014 и 2024 · свои листы из картинки или PDF · комнаты для мастера · спутники · кубы · работает без интернета
 
 ### [▶ Открыть лист героя](https://watithemint.github.io/dnd-sheet/)
 
@@ -43,6 +43,21 @@
 - Спутники экспортируются, копируются, печатаются и удаляются вместе с героем.
 
 <img src="screenshots/companion-sheet.webp" alt="Лист спутника: ястреб Шквал рядом с хозяином" />
+
+### 🚪 Комнаты игроков — для мастера
+
+<img src="screenshots/room.webp" alt="Комната игроков: карточки трёх персонажей и заметки на полотне" />
+
+Полотно, на котором лежат листы всей партии. Мастер видит сразу у всех хиты, КД, спасброски, ячейки и состояния — и может бросить за любого игрока прямо с карточки.
+
+- **Импорт всей партии за раз:** игроки присылают свои файлы («⋯» → «Экспорт в JSON»), мастер перетаскивает их на полотно. Подойдут и экспорты Long Story Short.
+- **Повторный импорт обновляет лист.** Игрок прислал свежий файл после сессии — его карточка обновится, а не появится второй раз.
+- **Карточки можно двигать, растягивать и переключать:** кратко (всё главное для боя), весь лист целиком или ваш собственный лист из «Листов».
+- **Заметки-стикеры** для инициативы, напоминаний и сюжетных зацепок. Двойной клик по полотну — новая заметка.
+- Полотно двигается мышью, пальцем или колесом, масштаб — Ctrl + колесо или щипком. «Упорядочить» раскладывает карточки ровными рядами.
+- На полотно можно положить и своих героев из «Героев». Персонажи игроков живут в комнате и не смешиваются с вашими.
+- Комнату целиком можно выгрузить в файл и открыть на другом устройстве, например на планшете за столом.
+- **Живая комната:** «Пригласить» → ссылка в чат группы. Игроки открывают её, выбирают героя — и дальше каждое изменение на их листе через секунду видно мастеру, а на карточке горит «в сети». Нужна одноразовая настройка Firebase — см. [ниже](#живые-комнаты-настройка-firebase).
 
 ### 📜 Свои листы
 
@@ -90,6 +105,7 @@
 
 1. Откройте **[watithemint.github.io/dnd-sheet](https://watithemint.github.io/dnd-sheet/)**.
 2. Нажмите «Новый герой» или «Пример героя», чтобы посмотреть готовый лист со спутником.
+   Мастеру — «Комнаты» → «Новая комната», и перетащите туда файлы игроков.
 3. Чтобы пользоваться без интернета, установите приложение:
    - на компьютере — кнопка «Установить» в меню сайта;
    - на Android — «Добавить на главный экран»;
@@ -141,13 +157,59 @@ npm run build      # готовый сайт в dist/
 
 **Кнопка «Поддержать»** настраивается в `config.json` в корне сайта, без пересборки. Разрешены только ссылки `https://`.
 
+### Живые комнаты: настройка Firebase
+
+Синхронизации нужен посредник между браузерами — бесплатная база Firebase Realtime Database от Google. Настраивается один раз, пересобирать сайт не нужно.
+
+1. Откройте [console.firebase.google.com](https://console.firebase.google.com), войдите в Google-аккаунт и нажмите **«Создать проект»**. Название любое, например `dnd-sheet`. Google Analytics можно выключить.
+2. Слева **Build → Realtime Database → Create Database**. Расположение — **Belgium (europe-west1)**, режим — **Start in locked mode**.
+3. На вкладке **Rules** замените всё содержимое правилами ниже и нажмите **Publish**.
+4. **Build → Authentication → Get started → Sign-in method → Anonymous → Enable → Save**. Там же, на вкладке **Settings → Authorized domains**, добавьте `watithemint.github.io` (или свой домен).
+5. Шестерёнка у «Project Overview» → **Project settings → General → Your apps →** значок **`</>`** (Web). Название любое, Firebase Hosting не нужен → **Register app**. Появится блок `firebaseConfig`.
+6. Скопируйте из него `apiKey`, `authDomain`, `databaseURL`, `projectId`, `appId` в раздел `sync.firebase` файла `config.json` в репозитории и сохраните. Через пару минут в комнатах заработает «Пригласить».
+
+Эти настройки не секретные — их видит браузер каждого посетителя. Защищают данные правила: игрок может писать только свой лист, мастер — только свою комнату, а без кода комнаты ничего не прочитать.
+
+```json
+{
+  "rules": {
+    "rooms": {
+      "$code": {
+        ".read": "auth != null && $code.length >= 10",
+        ".write": "auth != null && data.child('meta/gm').val() === auth.uid && !newData.exists()",
+        "meta": {
+          ".write": "auth != null && (!data.exists() || data.child('gm').val() === auth.uid)",
+          ".validate": "newData.child('gm').val() === auth.uid && newData.child('name').isString() && newData.child('name').val().length <= 200"
+        },
+        "players": {
+          "$uid": {
+            ".write": "auth != null && (auth.uid === $uid || root.child('rooms/' + $code + '/meta/gm').val() === auth.uid)",
+            "$hero": {
+              ".validate": "root.child('rooms/' + $code + '/meta').exists() && newData.child('character').isString() && newData.child('character').val().length < 400000 && newData.child('companions').isString() && newData.child('companions').val().length < 400000 && newData.child('portrait').isString() && newData.child('portrait').val().length < 60000"
+            }
+          }
+        },
+        "presence": {
+          "$uid": {
+            ".write": "auth != null && auth.uid === $uid"
+          }
+        },
+        "$other": { ".validate": false }
+      }
+    }
+  }
+}
+```
+
+Бесплатного тарифа Spark хватает с большим запасом: лист героя без картинок весит десятки килобайт. Картинки галереи в облако не отправляются, портрет — только маленькой копией.
+
 ```
 src/
   lib/          расчёты, формулы, кубы, импорт LSS, PDF, экспорт
   data/         правила 5e, статблоки спутников, темы, привязки полей
   store/        состояние (zustand + IndexedDB)
   components/   общие компоненты, редактор текста, кубы
-  features/     страницы: герои, лист, спутники, галерея, шаблоны, настройки
+  features/     страницы: герои, лист, спутники, галерея, комнаты, шаблоны, настройки
   styles/       CSS по разделам, темы — в tokens.css
 ```
 
@@ -161,4 +223,4 @@ src/
 
 ---
 
-<sub>🇬🇧 **Hero Sheet** is a free, offline-first D&D 5e character sheet (2014 and 2024 rules) in Russian. It calculates everything automatically, lets you place fields on your own sheet images or PDFs, and supports companions (familiars, pets, steeds) with formulas based on their owner. It also has seven themes, an image gallery, dice, and import from Long Story Short. All data stays in your browser.</sub>
+<sub>🇬🇧 **Hero Sheet** is a free, offline-first D&D 5e character sheet (2014 and 2024 rules) in Russian. It calculates everything automatically, lets you place fields on your own sheet images or PDFs, and supports companions (familiars, pets, steeds) with formulas based on their owner. Game masters get player rooms: a canvas with the whole party's sheets that can be imported in one go and updated from fresh exports. It also has seven themes, an image gallery, dice, and import from Long Story Short. All data stays in your browser.</sub>
