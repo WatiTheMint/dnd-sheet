@@ -30,11 +30,24 @@
 
 Короткий и длинный отдых восстанавливают то, что положено. Клик по любому бонусу бросает кубы, для преимущества и помехи зажмите Shift или Alt.
 
+### 📖 Справочник заклинаний
+
+319 заклинаний SRD 5.1 на русском: описание, время накладывания, дистанция, компоненты с материалами, длительность, усиление на высоких уровнях и списки классов. Поиск по-русски и по-английски, фильтры по уровню, классу, концентрации и ритуалу — по умолчанию показаны заклинания ваших классов.
+
+- **«Добавить» — и заклинание уже в книге** с уровнем, школой, костями урона и пометкой вроде «Спасбросок Ловкости · Урон: огонь».
+- **Книжка 📖 в строке заклинания** открывает полное описание. Она появляется и у заклинаний, вписанных вручную, если название совпало со справочником.
+- **«Из справочника»** в карточке своего заклинания заполняет поля, не трогая подготовку, ссылку и ваши заметки.
+- Справочник загружается только при первом открытии и дальше работает без интернета.
+
 ### 🎲 Кубики катятся по экрану
 
 Каждый бросок — это настоящие 3D-кубики с физикой: d4, d6, d8, d10, d12, d20 и d100. Какие кубики бросили, такие и летят. Когда они останавливаются, над ними всплывает бонус («+7») и итог. Атака бросается целиком: попадание и урон разом, на натуральной 20 урон считается как критический. Натуральная 20 светится золотом, единица — красным.
 
 В живой комнате броски общие: игрок бросает на своём листе — его кубики его цветом прилетают на стол мастеру и остальным игрокам. Мастер бросает с карточки игрока — это видят все. Кубики можно выключить в «Настройках».
+
+**У каждого героя свой цвет** — кубики, рамка карточки в комнате и кольцо портрета. Цвет раздаётся автоматически, а свой можно выбрать кружком рядом с именем на листе: двенадцать готовых или любой. Спутники берут цвет хозяина.
+
+**Урон с последней атаки.** После броска урона рядом с хитами появляется кнопка ⚔ с числом — один клик, и урон снят (сначала с временных хитов). Shift — половина, для сопротивления. Каждому герою один бросок наносится один раз, так что «Огненный шар» можно раздать всем, кого задело.
 
 ### 🐾 Спутники — фамильяры, питомцы, скакуны
 
@@ -64,6 +77,7 @@
 - На полотно можно положить и своих героев из «Героев». Персонажи игроков живут в комнате и не смешиваются с вашими.
 - Комнату целиком можно выгрузить в файл и открыть на другом устройстве, например на планшете за столом.
 - **Живая комната:** «Пригласить» → ссылка в чат группы. Игроки открывают её, выбирают героя — и дальше каждое изменение на их листе через секунду видно мастеру, а на карточке горит «в сети». Броски кубиков тоже общие — они катятся по столу у всех. Нужна одноразовая настройка Firebase — см. [ниже](#живые-комнаты-настройка-firebase).
+- **Урон в обе стороны.** Мастер снимает хиты, ставит состояние, истощение или вдохновение прямо на карточке игрока — у игрока это применяется к его листу, и он видит уведомление «Мастер: −10 хитов — Длинный лук». Игрок сам поменял себе хиты — остальные игроки комнаты видят «Ирвин: −5 хитов (13/22)».
 
 ### 📜 Свои листы
 
@@ -174,7 +188,9 @@ npm run build      # готовый сайт в dist/
 5. Шестерёнка у «Project Overview» → **Project settings → General → Your apps →** значок **`</>`** (Web). Название любое, Firebase Hosting не нужен → **Register app**. Появится блок `firebaseConfig`.
 6. Скопируйте из него `apiKey`, `authDomain`, `databaseURL`, `projectId`, `appId` в раздел `sync.firebase` файла `config.json` в репозитории и сохраните. Через пару минут в комнатах заработает «Пригласить».
 
-Эти настройки не секретные — их видит браузер каждого посетителя. Защищают данные правила: игрок может писать только свой лист, мастер — только свою комнату, а без кода комнаты ничего не прочитать.
+Эти настройки не секретные — их видит браузер каждого посетителя. Защищают данные правила: игрок может писать только свой лист, мастер — только свою комнату, а без кода комнаты ничего не прочитать. Правки мастера игроку (`inbox`) может отправить только мастер этой комнаты, а сам лист игрок по-прежнему пишет только свой.
+
+Если вы настраивали комнаты до версии 1.6 — замените правила целиком: добавились разделы `inbox` (урон от мастера) и `feed` (новости о хитах). Со старыми правилами всё остальное работает, а мастер увидит подсказку обновить правила.
 
 ```json
 {
@@ -206,6 +222,20 @@ npm run build      # готовый сайт в dist/
             ".validate": "newData.child('spec').isString() && newData.child('spec').val().length < 6000 && newData.child('at').isNumber()"
           }
         },
+        "inbox": {
+          "$uid": {
+            ".write": "auth != null && (auth.uid === $uid || root.child('rooms/' + $code + '/meta/gm').val() === auth.uid)",
+            "$event": {
+              ".validate": "newData.child('op').isString() && newData.child('op').val().length < 2000 && newData.child('at').isNumber()"
+            }
+          }
+        },
+        "feed": {
+          "$uid": {
+            ".write": "auth != null && auth.uid === $uid",
+            ".validate": "newData.child('ev').isString() && newData.child('ev').val().length < 1000 && newData.child('at').isNumber()"
+          }
+        },
         "$other": { ".validate": false }
       }
     }
@@ -229,10 +259,10 @@ src/
 
 Неофициальный фанатский инструмент, не связан с Wizards of the Coast. Dungeons & Dragons — товарный знак Wizards of the Coast LLC.
 
-Статблоки фамильяров и зверей взяты из System Reference Document 5.1 («SRD 5.1») Wizards of the Coast LLC ([dnd.wizards.com/resources/systems-reference-document](https://dnd.wizards.com/resources/systems-reference-document)). SRD 5.1 распространяется по лицензии [Creative Commons Attribution 4.0 International](https://creativecommons.org/licenses/by/4.0/legalcode).
+Справочник заклинаний и статблоки фамильяров и зверей взяты из System Reference Document 5.1 («SRD 5.1») Wizards of the Coast LLC ([dnd.wizards.com/resources/systems-reference-document](https://dnd.wizards.com/resources/systems-reference-document)). SRD 5.1 распространяется по лицензии [Creative Commons Attribution 4.0 International](https://creativecommons.org/licenses/by/4.0/legalcode). Изменения: заклинания переведены на русский, исправлены опечатки исходной выгрузки, добавлены краткие пометки (атака, спасбросок, вид урона).
 
 Шрифты Alegreya и Caveat — SIL Open Font License, иконки — [Lucide](https://lucide.dev) (ISC).
 
 ---
 
-<sub>🇬🇧 **Hero Sheet** is a free, offline-first D&D 5e character sheet (2014 and 2024 rules) in Russian. It calculates everything automatically, lets you place fields on your own sheet images or PDFs, and supports companions (familiars, pets, steeds) with formulas based on their owner. Game masters get player rooms: a canvas with the whole party's sheets that can be imported in one go and updated from fresh exports. It also has seven themes, an image gallery, dice, and import from Long Story Short. All data stays in your browser.</sub>
+<sub>🇬🇧 **Hero Sheet** is a free, offline-first D&D 5e character sheet (2014 and 2024 rules) in Russian. It calculates everything automatically, lets you place fields on your own sheet images or PDFs, and supports companions (familiars, pets, steeds) with formulas based on their owner. Game masters get player rooms: a canvas with the whole party's sheets that can be imported in one go and updated from fresh exports. It also has a Russian spell reference (all 319 SRD 5.1 spells), live rooms with shared 3D dice and two-way HP updates, seven themes, an image gallery and import from Long Story Short. All data stays in your browser.</sub>
